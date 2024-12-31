@@ -1,6 +1,6 @@
 # amused
 
-amused is a music playlist downloader for YouTube which embeds metadata and lyrics information.
+amused is a music playlist downloader for YouTube which embeds metadata and lyrics.
 
 ## Instructions
 
