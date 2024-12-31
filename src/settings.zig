@@ -1,16 +1,22 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const fs = std.fs;
+
 fn file_exists(path: []const u8) bool {
-    const file = std.fs.openFileAbsolute(path, .{ .mode = .read_only }) catch return false;
+    const file = fs.openFileAbsolute(path, .{ .mode = .read_only }) catch return false;
     defer file.close();
 
     const stat = file.stat() catch return false;
     return stat.kind == .file;
 }
 
+pub fn ensure_directory_exists(path: []const u8) void {
+    fs.makeDirAbsolute(path) catch {};
+}
+
 fn get_setting_absolute_path(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
-    const appData = std.fs.getAppDataDir(allocator, "amusing") catch |err| switch (err) {
+    const appData = fs.getAppDataDir(allocator, "amusing") catch |err| switch (err) {
         error.OutOfMemory => {
             std.log.err("Application could not store the AppData directory path into memory!", .{});
             std.process.exit(1);
@@ -22,7 +28,14 @@ fn get_setting_absolute_path(allocator: std.mem.Allocator, name: []const u8) ![]
     };
     defer allocator.free(appData);
 
-    const path = try std.fs.path.join(allocator, &[_][]const u8{ appData, name });
+    ensure_directory_exists(appData);
+
+    const settings = try fs.path.join(allocator, &[_][]const u8{ appData, "settings" });
+    defer allocator.free(settings);
+
+    ensure_directory_exists(settings);
+
+    const path = try fs.path.join(allocator, &[_][]const u8{ appData, "settings", name });
 
     return path;
 }
@@ -44,7 +57,7 @@ pub fn read_setting(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
     const path = try get_setting_absolute_path(allocator, name);
     defer allocator.free(path);
 
-    const file = try std.fs.openFileAbsolute(path, .{ .mode = .read_only });
+    const file = try fs.openFileAbsolute(path, .{ .mode = .read_only });
     defer file.close();
 
     const endPos = try file.getEndPos();
@@ -67,7 +80,7 @@ pub fn write_setting(allocator: std.mem.Allocator, name: []const u8, value: []co
     const path = try get_setting_absolute_path(allocator, name);
     defer allocator.free(path);
 
-    const file = try std.fs.createFileAbsolute(path, .{});
+    const file = try fs.createFileAbsolute(path, .{});
     defer file.close();
 
     _ = try file.write(value);
