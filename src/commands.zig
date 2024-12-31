@@ -6,23 +6,7 @@ pub const Command = struct {
     execute: *const fn ([]const []const u8) anyerror!void,
 };
 
-pub fn setExecute (args: []const []const u8) !void {
-    std.debug.print("Executing set with args: {any}\n", .{args});
-}
+const download = @import("./commands/download.zig").download;
+const set = @import("./commands/set.zig").set;
 
-pub const set = Command {
-    .name = "set",
-    .description = "Modifies a global setting",
-    .execute = &setExecute
-};
-
-
-pub fn downloadExecute (args: []const []const u8) !void {
-    std.debug.print("Executing download with args: {any}\n", .{args});
-}
-
-pub const download = Command {
-    .name = "download",
-    .description = "Downloads a playlist",
-    .execute = &downloadExecute
-};
+pub const list = [_]Command{ download, set };

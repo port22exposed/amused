@@ -2,7 +2,7 @@ const std = @import("std");
 
 const commands = @import("commands.zig");
 
-const commandsList = [_]commands.Command{ commands.download, commands.set };
+const commandsList = commands.list;
 
 fn printHelp() !void {
     const stdout = std.io.getStdOut().writer();
