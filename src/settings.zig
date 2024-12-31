@@ -9,7 +9,7 @@ fn file_exists(path: []const u8) bool {
     return stat.kind == .file;
 }
 
-pub fn is_set(allocator: std.mem.Allocator, name: []const u8) !bool {
+fn get_setting_absolute_path(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
     const appData = std.fs.getAppDataDir(allocator, "amusing") catch |err| switch (err) {
         error.OutOfMemory => {
             std.log.err("Application could not store the AppData directory path into memory!", .{});
@@ -23,6 +23,12 @@ pub fn is_set(allocator: std.mem.Allocator, name: []const u8) !bool {
     defer allocator.free(appData);
 
     const path = try std.fs.path.join(allocator, &[_][]const u8{ appData, name });
+
+    return path;
+}
+
+pub fn is_set(allocator: std.mem.Allocator, name: []const u8) !bool {
+    const path = try get_setting_absolute_path(allocator, name);
     defer allocator.free(path);
 
     return file_exists(path);
@@ -35,19 +41,7 @@ test "is_set" {
 }
 
 pub fn read_setting(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
-    const appData = std.fs.getAppDataDir(allocator, "amusing") catch |err| switch (err) {
-        error.OutOfMemory => {
-            std.log.err("Application could not store the AppData directory path into memory!", .{});
-            std.process.exit(1);
-        },
-        error.AppDataDirUnavailable => {
-            std.log.err("AppData directory unavailable!", .{});
-            std.process.exit(1);
-        },
-    };
-    defer allocator.free(appData);
-
-    const path = try std.fs.path.join(allocator, &[_][]const u8{ appData, name });
+    const path = try get_setting_absolute_path(allocator, name);
     defer allocator.free(path);
 
     const file = try std.fs.openFileAbsolute(path, .{ .mode = .read_only });
@@ -70,19 +64,7 @@ test "read_setting" {
 }
 
 pub fn write_setting(allocator: std.mem.Allocator, name: []const u8, value: []const u8) !void {
-    const appData = std.fs.getAppDataDir(allocator, "amusing") catch |err| switch (err) {
-        error.OutOfMemory => {
-            std.log.err("Application could not store the AppData directory path into memory!", .{});
-            std.process.exit(1);
-        },
-        error.AppDataDirUnavailable => {
-            std.log.err("AppData directory unavailable!", .{});
-            std.process.exit(1);
-        },
-    };
-    defer allocator.free(appData);
-
-    const path = try std.fs.path.join(allocator, &[_][]const u8{ appData, name });
+    const path = try get_setting_absolute_path(allocator, name);
     defer allocator.free(path);
 
     const file = try std.fs.createFileAbsolute(path, .{});
