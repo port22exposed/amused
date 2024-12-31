@@ -1,14 +1,12 @@
 const std = @import("std");
 
-const commands = @import("commands.zig");
-
-const commandsList = commands.list;
+const commands = @import("commands.zig").list;
 
 fn printHelp() !void {
     const stdout = std.io.getStdOut().writer();
     try stdout.print("Usage: amused <subcommand> [args...]\n\n", .{});
     try stdout.print("Available subcommands:\n", .{});
-    for (commandsList) |cmd| {
+    for (commands) |cmd| {
         try stdout.print("  {s:<15} {s}\n", .{ cmd.name, cmd.description });
     }
 }
@@ -34,7 +32,7 @@ pub fn main() !void {
     }
 
     const subcommand = argList.items[1];
-    for (commandsList) |cmd| {
+    for (commands) |cmd| {
         if (std.mem.eql(u8, subcommand, cmd.name)) {
             try cmd.execute(argList.items[2..]);
             return;
