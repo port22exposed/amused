@@ -23,7 +23,6 @@ pub fn main() !void {
     defer argList.deinit();
 
     while (args.next()) |arg| {
-        std.log.info("{s}", .{arg});
         try argList.append(arg);
     }
 
@@ -41,4 +40,6 @@ pub fn main() !void {
             return;
         }
     }
+
+    try printHelp();
 }
